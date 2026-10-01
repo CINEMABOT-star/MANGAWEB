@@ -1,12 +1,15 @@
 # Yoru — catalogo manga
 
-Sito statico in italiano, pronto per GitHub Pages. Non richiede build né dipendenze: la homepage è `index.html`.
+Catalogo manga statico in italiano: ricerca per titolo, autore o genere, filtri interattivi, schede dettaglio e lista preferiti salvata nel browser. Interfaccia responsive senza dipendenze o passaggio di build.
 
-## Pubblicazione su GitHub Pages
+## Sito online
 
-1. Crea su GitHub un nuovo repository pubblico, ad esempio `yoru-manga-catalogo`, senza aggiungere file iniziali.
-2. Carica in quel repository il contenuto di questa cartella, mantenendo `index.html` nella radice e `.github/workflows/pages.yml`.
-3. In **Settings → Pages**, seleziona **GitHub Actions** come sorgente.
-4. In **Actions**, controlla il workflow **Pubblica su GitHub Pages**. Al termine, GitHub mostrerà l'indirizzo pubblico nelle impostazioni di Pages.
+[Apri Yoru su GitHub Pages](https://cinemabot-star.github.io/MANGAWEB/)
 
-Il workflow ripubblica automaticamente il sito a ogni push sul branch `main`. I preferiti vengono salvati nel browser del visitatore tramite `localStorage`.
+## Repository e pubblicazione
+
+Questo progetto è pubblicato dal repository [CINEMABOT-star/MANGAWEB](https://github.com/CINEMABOT-star/MANGAWEB). GitHub Actions distribuisce automaticamente il contenuto della radice su GitHub Pages a ogni push sul branch `main`, usando il workflow [pages.yml](./.github/workflows/pages.yml).
+
+Per verificare o rilanciare la pubblicazione, visita [Actions](https://github.com/CINEMABOT-star/MANGAWEB/actions/workflows/pages.yml). L'indirizzo del sito è disponibile anche in **Settings → Pages**.
+
+I preferiti vengono conservati localmente nel browser del visitatore tramite `localStorage`.
