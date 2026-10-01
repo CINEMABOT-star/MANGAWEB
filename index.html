@@ -86,6 +86,7 @@
     .cover { height:auto; aspect-ratio: .72; overflow:hidden; position:relative; border-radius:4px; background:#272727; isolation:isolate; transition:transform .25s, box-shadow .25s; }
     .card:hover .cover { transform:translateY(-5px) scale(1.018); box-shadow:0 15px 30px #0009; }
     .art { position:absolute; inset:0; overflow:hidden; }
+    .art img { width:100%; height:100%; object-fit:cover; }
     .art::before { content:""; position:absolute; inset:0; background:var(--art); }
     .art::after { content:""; position:absolute; inset:0; background:linear-gradient(0deg,#090909d9,transparent 62%),linear-gradient(90deg,#0002,transparent 60%); }
     .art-orb { position:absolute; z-index:1; width:58%; aspect-ratio:1; border-radius:50%; top:13%; right:9%; background:var(--orb); opacity:.8; filter:blur(.2px); box-shadow:0 0 46px var(--orb); }
@@ -114,6 +115,12 @@
     .modal-copy h2 { font-size:32px; margin:12px 0; }
     .modal-copy p { color:#bbb8b1; font-size:13px; line-height:1.7; }
     .modal-copy .hero-meta { flex-wrap:wrap; }
+    .chapter-heading { font:500 16px var(--serif); margin:20px 0 8px; }
+    .chapter-list { list-style:none; margin:0 0 18px; padding:0; max-height:180px; overflow:auto; }
+    .chapter-list li { border-bottom:1px solid var(--line); }
+    .chapter-list a { display:flex; justify-content:space-between; gap:12px; padding:10px 2px; color:#e8e5dd; font-size:12px; }
+    .chapter-list a:hover { color:var(--accent); }
+    .chapter-empty { color:var(--muted); font-size:11px!important; }
     .modal-close { position:absolute; right:12px; top:10px; border:0; background:transparent; color:#aaa; font-size:23px; cursor:pointer; }
     .toast {
       position:fixed; z-index:20; left:50%; bottom:26px; max-width:calc(100% - 32px);
@@ -170,6 +177,7 @@
     <div class="content" id="catalogo">
       <section class="section">
         <div class="section-head"><div><h2>Una storia per ogni momento</h2><div class="section-sub">Selezionati con cura, aggiornati ogni settimana.</div></div><button class="text-link" id="clearFilters">Mostra tutto ↗</button></div>
+        <div class="filters" id="typeFilters" aria-label="Filtra per tipo"></div>
         <div class="filters" id="filters" aria-label="Filtra per genere"></div>
         <p class="sr-only" id="resultsStatus" aria-live="polite" aria-atomic="true"></p>
         <div class="grid" id="mangaGrid"></div>
@@ -188,25 +196,15 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script>
-    const manga = [
-      {id:"sotto-cielo",title:"Sotto un cielo lontano",author:"Mina Kisaragi",genre:"Fantasy",year:2024,rating:"9.4",volumes:"12 volumi",description:"Dopo aver perso ogni ricordo della sua infanzia, Aoi trova una mappa disegnata con la propria calligrafia. Il viaggio per seguirla cambierà ogni cosa.",style:"linear-gradient(145deg,#253945,#bd654a 58%,#e4b36a)",orb:"#edc38c",shape:"#252834"},
-      {id:"ultima-estate",title:"L'ultima estate",author:"Ren Sato",genre:"Slice of life",year:2023,rating:"9.1",volumes:"8 volumi",description:"Quattro amici, una casa sul mare e l'estate che avrebbero voluto fermare. Una storia luminosa sulle cose che cambiano, e su quelle che restano.",style:"linear-gradient(145deg,#5c8e9b,#d6a773 62%,#f4d5a2)",orb:"#f6d792",shape:"#384653"},
-      {id:"lame-neve",title:"Lame di neve",author:"T. Arakawa",genre:"Azione",year:2025,rating:"8.9",volumes:"In corso",description:"Ai confini del nord, una spadaccina in esilio protegge l'ultimo villaggio rimasto. Ma la neve porta con sé ombre che nessuna lama può ferire.",style:"linear-gradient(145deg,#243447,#7793a3 52%,#e1e5e5)",orb:"#edf4ee",shape:"#27313d"},
-      {id:"citta-invisibile",title:"La città invisibile",author:"Yumi Hoshino",genre:"Mistero",year:2022,rating:"9.2",volumes:"6 volumi",description:"Ogni notte appare una strada che non esiste. Un giovane archivista la percorre per ritrovare sua sorella, seguendo indizi nascosti nei sogni degli abitanti.",style:"linear-gradient(150deg,#263251,#535d89 55%,#d3998e)",orb:"#e6a987",shape:"#28243c"},
-      {id:"giardino-luna",title:"Il giardino della luna",author:"E. Mizuno",genre:"Romance",year:2024,rating:"8.8",volumes:"9 volumi",description:"Una fioraia che parla con le piante e un astronomo che ha smesso di guardare le stelle. La loro serra, aperta solo dopo il tramonto, diventa un nuovo inizio.",style:"linear-gradient(145deg,#304939,#769a69 53%,#dfbf78)",orb:"#e8d291",shape:"#353d37"},
-      {id:"zero-ora",title:"Zero Hour",author:"Kaito Mori",genre:"Sci-fi",year:2025,rating:"9.0",volumes:"In corso",description:"Restano settantadue minuti prima che la luna si spenga. Una pilota e un'intelligenza artificiale attraversano lo spazio per scoprire chi ha fermato il tempo.",style:"linear-gradient(150deg,#182d48,#4479a3 50%,#ae6571)",orb:"#efb16f",shape:"#242a39"},
-      {id:"canto-corvi",title:"Il canto dei corvi",author:"Nana Fujii",genre:"Mistero",year:2021,rating:"8.7",volumes:"11 volumi",description:"In un villaggio dove i corvi ricordano tutto, una bambina scopre di essere l'unica a non avere un passato. Un mistero poetico dalle atmosfere sospese.",style:"linear-gradient(145deg,#24242d,#63505e 55%,#b98f72)",orb:"#d7b68f",shape:"#292732"},
-      {id:"cucina-mostri",title:"Cucina mostri!",author:"Tomo Ueda",genre:"Commedia",year:2023,rating:"8.6",volumes:"7 volumi",description:"Il ristorante di Akira serve piatti impossibili a clienti ancora più improbabili. La ricetta segreta? Ascoltare le storie di chi si siede a tavola.",style:"linear-gradient(145deg,#597344,#d2a14b 58%,#d46a48)",orb:"#f4c56e",shape:"#4c3b35"},
-      {id:"mare-rosso",title:"Mare rosso",author:"Haru Takeda",genre:"Azione",year:2024,rating:"9.3",volumes:"10 volumi",description:"Su un pianeta coperto d'acqua, una capitana cerca la nave che ha tradito la sua famiglia. Ogni isola custodisce una verità e un prezzo da pagare.",style:"linear-gradient(145deg,#273e52,#a94f48 58%,#df9b69)",orb:"#f0b779",shape:"#28303b"},
-      {id:"piccole-orbite",title:"Piccole orbite",author:"Sora Abe",genre:"Slice of life",year:2025,rating:"8.9",volumes:"4 volumi",description:"Due coinquilini, un gatto randagio e la quotidianità vista da molto vicino. Piccoli gesti che, pagina dopo pagina, diventano un universo intero.",style:"linear-gradient(145deg,#637e8e,#c38f79 58%,#ead1a2)",orb:"#f3dbaa",shape:"#424750"},
-      {id:"lupo-bianco",title:"Il lupo bianco",author:"R. Kurosawa",genre:"Fantasy",year:2022,rating:"9.1",volumes:"14 volumi",description:"Una guaritrice attraversa terre proibite in compagnia di un lupo che conosce il nome delle stelle. Un fantasy epico sul coraggio di scegliere la propria strada.",style:"linear-gradient(145deg,#344452,#87959a 58%,#c8b49a)",orb:"#ede0bf",shape:"#34353b"},
-      {id:"lettere-maggio",title:"Lettere di maggio",author:"Ami Natsume",genre:"Romance",year:2023,rating:"8.8",volumes:"5 volumi",description:"Una lettera arriva ogni primavera, sempre senza firma. Quando finalmente la destinataria scopre chi le scrive, la risposta è più vicina di quanto immaginasse.",style:"linear-gradient(145deg,#5d454b,#c5807b 58%,#e7c29b)",orb:"#f2d6bc",shape:"#493a40"}
-    ];
-    const genres = ["Tutti","Fantasy","Azione","Romance","Mistero","Slice of life","Sci-fi","Commedia"];
+    let manga = [];
+    const defaultGenres = ["Fantasy","Azione","Romance","Mistero","Slice of life","Sci-fi","Commedia"];
+    const types = ["Tutti","Manga","Libro"];
     const grid = document.getElementById("mangaGrid");
     const search = document.getElementById("search");
     const filters = document.getElementById("filters");
+    const typeFilters = document.getElementById("typeFilters");
     let activeGenre = "Tutti";
+    let activeType = "Tutti";
     let favoritesOnly = false;
     let favorites = [];
     let toastTimeout;
@@ -224,29 +222,87 @@
       console.warn("Impossibile leggere i preferiti salvati:", error);
     }
 
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      })[character]);
+    }
+    function validateCatalog(data) {
+      if (!Array.isArray(data)) throw new Error("catalogo.json deve contenere una lista di titoli.");
+      const ids = new Set();
+      for (const [index, item] of data.entries()) {
+        const label = `catalogo.json: titolo ${index + 1}`;
+        if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`${label} non è un oggetto valido.`);
+        for (const field of ["id","title","author","genre","type","description","volumes"]) {
+          if (typeof item[field] !== "string" || !item[field].trim()) throw new Error(`${label}: il campo "${field}" è obbligatorio.`);
+        }
+        if (!/^[a-z0-9-]+$/.test(item.id) || ids.has(item.id)) throw new Error(`${label}: id non valido o duplicato ("${item.id}").`);
+        ids.add(item.id);
+        if (!["manga","libro"].includes(item.type)) throw new Error(`${label}: "type" deve essere "manga" oppure "libro".`);
+        if (!Number.isInteger(item.year) || item.year < 1 || item.year > 9999) throw new Error(`${label}: "year" deve essere un anno valido.`);
+        if (!Array.isArray(item.chapters)) throw new Error(`${label}: "chapters" deve essere una lista.`);
+        for (const [chapterIndex, chapter] of item.chapters.entries()) {
+          if (!chapter || typeof chapter.title !== "string" || !chapter.title.trim() ||
+              typeof chapter.url !== "string" || !/^https?:\/\//i.test(chapter.url)) {
+            throw new Error(`${label}: il capitolo ${chapterIndex + 1} deve avere un titolo e un link http/https.`);
+          }
+        }
+        for (const color of ["orb","shape"]) {
+          if (typeof item[color] !== "string" || !/^#[0-9a-f]{6}$/i.test(item[color])) throw new Error(`${label}: "${color}" deve essere un colore esadecimale, ad esempio "#d7f36a".`);
+        }
+        if (typeof item.style !== "string" || !/^linear-gradient\([#a-z0-9.,% ()-]+\)$/i.test(item.style)) throw new Error(`${label}: "style" deve essere un gradiente lineare valido.`);
+        if (item.cover && (typeof item.cover !== "string" || !/^https:\/\//i.test(item.cover))) throw new Error(`${label}: "cover" deve essere un'immagine con link https.`);
+      }
+    }
+    async function loadCatalog() {
+      try {
+        const response = await fetch("./catalogo.json");
+        if (!response.ok) throw new Error(`Impossibile caricare catalogo.json (HTTP ${response.status}).`);
+        const data = await response.json();
+        validateCatalog(data);
+        manga = data;
+      } catch (error) {
+        console.error("Errore nel catalogo manga:", error);
+        grid.innerHTML = `<div class="empty"><strong>Il catalogo non è disponibile.</strong>${escapeHTML(error.message)} Controlla il file catalogo.json su GitHub.</div>`;
+        document.getElementById("resultsStatus").textContent = "Errore durante il caricamento del catalogo";
+        showToast("Errore nel catalogo: controlla catalogo.json su GitHub.");
+        return;
+      }
+      renderFilters();
+      renderTypeFilters();
+      render();
+    }
     function coverMarkup(item, extraClass = "") {
-      return `<div class="cover ${extraClass}" style="--art:${item.style};--orb:${item.orb};--shape:${item.shape}">
-        <div class="art"><span class="art-orb"></span><span class="art-shape"></span></div>
+      const cover = item.cover
+        ? `<div class="art"><img src="${escapeHTML(item.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>`
+        : `<div class="art"><span class="art-orb"></span><span class="art-shape"></span></div>`;
+      return `<div class="cover ${extraClass}" style="--art:${escapeHTML(item.style)};--orb:${escapeHTML(item.orb)};--shape:${escapeHTML(item.shape)}">
+        ${cover}
         <span class="cover-label">YORU · ${item.year}</span><span class="cover-vol">${item.volumes.startsWith("In") ? "連載" : "01"}</span>
-        <span class="cover-title">${item.title}</span>
+        <span class="cover-title">${escapeHTML(item.title)}</span>
       </div>`;
     }
     function renderFilters() {
+      const genres = ["Tutti", ...new Set([...defaultGenres, ...manga.map(item => item.genre)])];
       filters.innerHTML = genres.map(genre => `<button class="filter${genre === activeGenre ? " selected" : ""}" data-genre="${genre}" aria-pressed="${genre === activeGenre}">${genre}</button>`).join("");
+    }
+    function renderTypeFilters() {
+      typeFilters.innerHTML = types.map(type => `<button class="filter${type === activeType ? " selected" : ""}" data-type="${type}" aria-pressed="${type === activeType}">${type === "Tutti" ? "Tutti i titoli" : type}</button>`).join("");
     }
     function render() {
       const query = search.value.trim().toLocaleLowerCase("it");
-      const items = manga.filter(item => (activeGenre === "Tutti" || item.genre === activeGenre)
+      const items = manga.filter(item => (activeType === "Tutti" || item.type === activeType.toLocaleLowerCase("it"))
+        && (activeGenre === "Tutti" || item.genre === activeGenre)
         && (!favoritesOnly || favorites.includes(item.id))
-        && (!query || `${item.title} ${item.author} ${item.genre}`.toLocaleLowerCase("it").includes(query)));
+        && (!query || `${item.title} ${item.author} ${item.genre} ${item.type}`.toLocaleLowerCase("it").includes(query)));
       document.getElementById("resultsStatus").textContent = `${items.length} ${items.length === 1 ? "titolo trovato" : "titoli trovati"}`;
-      grid.innerHTML = items.length ? items.map(item => `<article class="card" data-id="${item.id}" tabindex="0" aria-label="${item.title}, di ${item.author}">
+      grid.innerHTML = items.length ? items.map(item => `<article class="card" data-id="${escapeHTML(item.id)}" tabindex="0" aria-label="${escapeHTML(item.title)}, di ${escapeHTML(item.author)}">
         <div style="position:relative">${coverMarkup(item)}
-          <button class="heart${favorites.includes(item.id) ? " is-favorite" : ""}" data-favorite="${item.id}" aria-label="${favorites.includes(item.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}" aria-pressed="${favorites.includes(item.id)}">
+          <button class="heart${favorites.includes(item.id) ? " is-favorite" : ""}" data-favorite="${escapeHTML(item.id)}" aria-label="${favorites.includes(item.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}" aria-pressed="${favorites.includes(item.id)}">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="${favorites.includes(item.id) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
           </button>
         </div>
-        <div class="card-title">${item.title}</div><div class="card-meta"><span>${item.genre} · ${item.year}</span><span class="card-rating">★ ${item.rating}</span></div>
+        <div class="card-title">${escapeHTML(item.title)}</div><div class="card-meta"><span>${item.type === "libro" ? "Libro" : "Manga"} · ${escapeHTML(item.genre)}</span><span class="card-rating">${item.rating ? `★ ${escapeHTML(item.rating)}` : item.chapters.length ? `${item.chapters.length} cap.` : ""}</span></div>
       </article>`).join("") : `<div class="empty"><strong>${favoritesOnly ? "La tua lista è ancora vuota." : "Nessuna storia trovata."}</strong>${favoritesOnly ? "Tocca il cuore su un manga per salvarlo qui." : "Prova un altro titolo o scegli un genere diverso."}</div>`;
     }
     function toggleFavorite(id) {
@@ -263,14 +319,24 @@
     }
     function openDetail(item) {
       document.getElementById("modalCover").innerHTML = coverMarkup(item);
-      document.getElementById("modalCopy").innerHTML = `<div class="eyebrow">${item.genre} · ${item.year}</div><h2 id="modalTitle">${item.title}</h2>
-        <div class="hero-meta"><span class="rating">★ ${item.rating}</span><span>${item.volumes}</span><span class="pill">${item.author}</span></div>
-        <p>${item.description}</p><button class="btn btn-primary" data-modal-favorite="${item.id}">${favorites.includes(item.id) ? "♥  Nella tua lista" : "＋  Aggiungi alla lista"}</button>`;
+      const chapters = item.chapters.length
+        ? `<h3 class="chapter-heading">Capitoli</h3><ol class="chapter-list">${item.chapters.map(chapter => `<li><a href="${escapeHTML(chapter.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(chapter.title)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ol>`
+        : `<p class="chapter-empty">Capitoli non ancora aggiunti.</p>`;
+      document.getElementById("modalCopy").innerHTML = `<div class="eyebrow">${item.type === "libro" ? "Libro" : "Manga"} · ${escapeHTML(item.genre)} · ${item.year}</div><h2 id="modalTitle">${escapeHTML(item.title)}</h2>
+        <div class="hero-meta">${item.rating ? `<span class="rating">★ ${escapeHTML(item.rating)}</span>` : ""}<span>${escapeHTML(item.volumes)}</span><span class="pill">${escapeHTML(item.author)}</span></div>
+        <p>${escapeHTML(item.description)}</p>${chapters}
+        <button class="btn btn-primary" data-modal-favorite="${escapeHTML(item.id)}">${favorites.includes(item.id) ? "♥  Nella tua lista" : "＋  Aggiungi alla lista"}</button>`;
       document.getElementById("modalBackdrop").classList.add("open");
       document.getElementById("modalClose").focus();
       showToast(`Hai aperto: ${item.title}`);
     }
-    renderFilters(); render();
+    loadCatalog();
+    typeFilters.addEventListener("click", event => {
+      const button = event.target.closest("[data-type]");
+      if (!button) return;
+      activeType = button.dataset.type; favoritesOnly = false; renderTypeFilters(); render();
+      showToast(`${activeType === "Tutti" ? "Tutti i titoli" : activeType} · ${grid.querySelectorAll(".card").length} titoli`);
+    });
     filters.addEventListener("click", event => {
       const button = event.target.closest("[data-genre]");
       if (!button) return;
@@ -289,14 +355,14 @@
       }
     });
     search.addEventListener("input", render);
-    document.getElementById("clearFilters").addEventListener("click", () => { activeGenre = "Tutti"; favoritesOnly = false; search.value = ""; renderFilters(); render(); showToast("Catalogo completo."); });
+    document.getElementById("clearFilters").addEventListener("click", () => { activeGenre = "Tutti"; activeType = "Tutti"; favoritesOnly = false; search.value = ""; renderFilters(); renderTypeFilters(); render(); showToast("Catalogo completo."); });
     document.getElementById("showFavorites").addEventListener("click", () => {
-      favoritesOnly = !favoritesOnly; activeGenre = "Tutti"; renderFilters(); render();
+      favoritesOnly = !favoritesOnly; activeGenre = "Tutti"; activeType = "Tutti"; renderFilters(); renderTypeFilters(); render();
       showToast(favoritesOnly ? `${favorites.length} ${favorites.length === 1 ? "titolo salvato" : "titoli salvati"} nella tua lista.` : "Stai esplorando tutto il catalogo.");
       document.getElementById("catalogo").scrollIntoView({behavior:"smooth"});
     });
     document.getElementById("favoritesNav").addEventListener("click", event => {
-      event.preventDefault(); favoritesOnly = true; activeGenre = "Tutti"; renderFilters(); render();
+      event.preventDefault(); favoritesOnly = true; activeGenre = "Tutti"; activeType = "Tutti"; renderFilters(); renderTypeFilters(); render();
       showToast(`${favorites.length} ${favorites.length === 1 ? "titolo salvato" : "titoli salvati"} nella tua lista.`);
       document.getElementById("catalogo").scrollIntoView({behavior:"smooth"});
     });
