@@ -118,10 +118,18 @@
     .chapter-heading { font:500 16px var(--serif); margin:20px 0 8px; }
     .chapter-list { list-style:none; margin:0 0 18px; padding:0; max-height:180px; overflow:auto; }
     .chapter-list li { border-bottom:1px solid var(--line); }
-    .chapter-list a { display:flex; justify-content:space-between; gap:12px; padding:10px 2px; color:#e8e5dd; font-size:12px; }
-    .chapter-list a:hover { color:var(--accent); }
+    .chapter-list a,.chapter-list button { width:100%; display:flex; justify-content:space-between; gap:12px; padding:10px 2px; color:#e8e5dd; font-size:12px; text-align:left; background:none; border:0; cursor:pointer; }
+    .chapter-list a:hover,.chapter-list button:hover { color:var(--accent); }
     .chapter-empty { color:var(--muted); font-size:11px!important; }
     .modal-close { position:absolute; right:12px; top:10px; border:0; background:transparent; color:#aaa; font-size:23px; cursor:pointer; }
+    .reader-backdrop { position:fixed; z-index:15; inset:0; display:none; align-items:center; justify-content:center; padding:20px; background:#080808f2; }
+    .reader-backdrop.open { display:flex; }
+    .reader { width:min(1000px,100%); max-height:95vh; overflow:auto; padding:16px; background:#181818; border:1px solid var(--line); border-radius:7px; }
+    .reader-head,.reader-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .reader-title { font:500 18px var(--serif); }
+    .reader-image { display:block; max-width:100%; max-height:75vh; margin:16px auto; object-fit:contain; }
+    .reader-controls { justify-content:center; color:var(--muted); font-size:12px; }
+    .reader-controls .btn { min-width:100px; }
     .toast {
       position:fixed; z-index:20; left:50%; bottom:26px; max-width:calc(100% - 32px);
       padding:12px 18px; border:1px solid #ffffff20; border-radius:6px;
@@ -194,6 +202,13 @@
       <div id="modalCover"></div><div class="modal-copy" id="modalCopy"></div>
     </article>
   </div>
+  <div class="reader-backdrop" id="readerBackdrop" role="presentation">
+    <section class="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
+      <div class="reader-head"><h2 class="reader-title" id="readerTitle"></h2><button class="btn btn-secondary" id="readerClose">Chiudi</button></div>
+      <img class="reader-image" id="readerImage" alt="">
+      <div class="reader-controls"><button class="btn btn-secondary" id="readerPrev">← Precedente</button><span id="readerCount"></span><button class="btn btn-secondary" id="readerNext">Successiva →</button></div>
+    </section>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script>
     let manga = [];
@@ -227,6 +242,9 @@
         "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
       })[character]);
     }
+    function assetUrl(path) {
+      return new URL(path.split("/").map(encodeURIComponent).join("/"), document.baseURI).href;
+    }
     function validateCatalog(data) {
       if (!Array.isArray(data)) throw new Error("catalogo.json deve contenere una lista di titoli.");
       const ids = new Set();
@@ -242,9 +260,14 @@
         if (!Number.isInteger(item.year) || item.year < 1 || item.year > 9999) throw new Error(`${label}: "year" deve essere un anno valido.`);
         if (!Array.isArray(item.chapters)) throw new Error(`${label}: "chapters" deve essere una lista.`);
         for (const [chapterIndex, chapter] of item.chapters.entries()) {
-          if (!chapter || typeof chapter.title !== "string" || !chapter.title.trim() ||
-              typeof chapter.url !== "string" || !/^https?:\/\//i.test(chapter.url)) {
-            throw new Error(`${label}: il capitolo ${chapterIndex + 1} deve avere un titolo e un link http/https.`);
+          const safePath = value => typeof value === "string" && value.length > 0 &&
+            !value.startsWith("/") && !value.split("/").includes("..");
+          const hasLink = chapter && typeof chapter.url === "string" &&
+            (/^https?:\/\//i.test(chapter.url) || safePath(chapter.url));
+          const hasPages = chapter && Array.isArray(chapter.pages) && chapter.pages.length > 0 &&
+            chapter.pages.every(safePath);
+          if (!chapter || typeof chapter.title !== "string" || !chapter.title.trim() || (!hasLink && !hasPages)) {
+            throw new Error(`${label}: il capitolo ${chapterIndex + 1} deve avere un titolo e un link o almeno una pagina immagine.`);
           }
         }
         for (const color of ["orb","shape"]) {
@@ -284,7 +307,7 @@
     }
     function renderFilters() {
       const genres = ["Tutti", ...new Set([...defaultGenres, ...manga.map(item => item.genre)])];
-      filters.innerHTML = genres.map(genre => `<button class="filter${genre === activeGenre ? " selected" : ""}" data-genre="${genre}" aria-pressed="${genre === activeGenre}">${genre}</button>`).join("");
+      filters.innerHTML = genres.map(genre => `<button class="filter${genre === activeGenre ? " selected" : ""}" data-genre="${escapeHTML(genre)}" aria-pressed="${genre === activeGenre}">${escapeHTML(genre)}</button>`).join("");
     }
     function renderTypeFilters() {
       typeFilters.innerHTML = types.map(type => `<button class="filter${type === activeType ? " selected" : ""}" data-type="${type}" aria-pressed="${type === activeType}">${type === "Tutti" ? "Tutti i titoli" : type}</button>`).join("");
@@ -320,7 +343,9 @@
     function openDetail(item) {
       document.getElementById("modalCover").innerHTML = coverMarkup(item);
       const chapters = item.chapters.length
-        ? `<h3 class="chapter-heading">Capitoli</h3><ol class="chapter-list">${item.chapters.map(chapter => `<li><a href="${escapeHTML(chapter.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(chapter.title)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ol>`
+        ? `<h3 class="chapter-heading">Capitoli</h3><ol class="chapter-list">${item.chapters.map((chapter, index) => `<li>${chapter.pages?.length
+          ? `<button type="button" data-chapter="${index}">${escapeHTML(chapter.title)} <span>${chapter.pages.length} pag. · Leggi →</span></button>`
+          : `<a href="${escapeHTML(/^https?:\/\//i.test(chapter.url) ? chapter.url : assetUrl(chapter.url))}" target="_blank" rel="noopener noreferrer">${escapeHTML(chapter.title)} <span aria-hidden="true">↗</span></a>`}</li>`).join("")}</ol>`
         : `<p class="chapter-empty">Capitoli non ancora aggiunti.</p>`;
       document.getElementById("modalCopy").innerHTML = `<div class="eyebrow">${item.type === "libro" ? "Libro" : "Manga"} · ${escapeHTML(item.genre)} · ${item.year}</div><h2 id="modalTitle">${escapeHTML(item.title)}</h2>
         <div class="hero-meta">${item.rating ? `<span class="rating">★ ${escapeHTML(item.rating)}</span>` : ""}<span>${escapeHTML(item.volumes)}</span><span class="pill">${escapeHTML(item.author)}</span></div>
@@ -376,7 +401,44 @@
     document.getElementById("modalBackdrop").addEventListener("click", event => { if (event.target.id === "modalBackdrop") closeDetail(); });
     document.getElementById("modalCopy").addEventListener("click", event => {
       const button = event.target.closest("[data-modal-favorite]");
-      if (button) { toggleFavorite(button.dataset.modalFavorite); openDetail(manga.find(item => item.id === button.dataset.modalFavorite)); }
+      if (button) { toggleFavorite(button.dataset.modalFavorite); openDetail(manga.find(item => item.id === button.dataset.modalFavorite)); return; }
+      const chapterButton = event.target.closest("[data-chapter]");
+      if (chapterButton) {
+        const item = manga.find(title => title.id === document.querySelector("[data-modal-favorite]")?.dataset.modalFavorite);
+        if (item) openChapter(item, Number(chapterButton.dataset.chapter));
+      }
+    });
+    let readerPages = [];
+    let readerIndex = 0;
+    function showReaderPage() {
+      document.getElementById("readerImage").src = assetUrl(readerPages[readerIndex]);
+      document.getElementById("readerCount").textContent = `Pagina ${readerIndex + 1} di ${readerPages.length}`;
+      document.getElementById("readerPrev").disabled = readerIndex === 0;
+      document.getElementById("readerNext").disabled = readerIndex === readerPages.length - 1;
+    }
+    function openChapter(item, chapterIndex) {
+      const chapter = item.chapters[chapterIndex];
+      if (!chapter || !chapter.pages?.length) return;
+      readerPages = chapter.pages;
+      readerIndex = 0;
+      document.getElementById("readerTitle").textContent = `${item.title} · ${chapter.title}`;
+      showReaderPage();
+      document.getElementById("readerBackdrop").classList.add("open");
+      document.getElementById("readerClose").focus();
+    }
+    function closeReader() {
+      document.getElementById("readerBackdrop").classList.remove("open");
+      document.getElementById("readerImage").removeAttribute("src");
+    }
+    document.getElementById("readerPrev").addEventListener("click", () => { if (readerIndex > 0) { readerIndex--; showReaderPage(); } });
+    document.getElementById("readerNext").addEventListener("click", () => { if (readerIndex < readerPages.length - 1) { readerIndex++; showReaderPage(); } });
+    document.getElementById("readerClose").addEventListener("click", closeReader);
+    document.getElementById("readerBackdrop").addEventListener("click", event => { if (event.target.id === "readerBackdrop") closeReader(); });
+    document.addEventListener("keydown", event => {
+      if (!document.getElementById("readerBackdrop").classList.contains("open")) return;
+      if (event.key === "Escape") closeReader();
+      if (event.key === "ArrowLeft" && readerIndex > 0) { readerIndex--; showReaderPage(); }
+      if (event.key === "ArrowRight" && readerIndex < readerPages.length - 1) { readerIndex++; showReaderPage(); }
     });
     document.addEventListener("keydown", event => { if (event.key === "Escape" && document.getElementById("modalBackdrop").classList.contains("open")) closeDetail(); });
   </script>

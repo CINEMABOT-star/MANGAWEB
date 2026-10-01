@@ -1,63 +1,58 @@
 # Yoru — catalogo manga e libri
 
-## Come aggiungere un titolo da GitHub
+## Aggiungere un manga o un libro
 
-1. Apri [`catalogo.json`](./catalogo.json) nel repository GitHub.
-2. Premi la matita **Edit this file**.
-3. Copia un oggetto già presente, incollalo prima della parentesi quadra finale `]` e cambia i campi. Metti una virgola tra gli oggetti.
-4. Per i capitoli, compila la lista `chapters`: ogni capitolo ha un titolo e un link `https://` alla pagina dove si può leggere.
-5. Premi **Commit changes** e conferma il commit sul branch `main`. GitHub Actions aggiorna il sito automaticamente.
+Ogni opera ha la sua cartella; ogni capitolo ha una sottocartella. Per mantenere facilmente questa struttura e caricare immagini in blocco, usa **GitHub Desktop**: clona `https://github.com/CINEMABOT-star/MANGAWEB.git`, copia la cartella `_modello` in `manga` oppure `libri`, rinominala con il titolo, poi fai **Commit to main** e **Push origin** da GitHub Desktop.
 
-Il catalogo si aggiorna normalmente in pochi minuti. Non serve modificare `index.html` o il workflow.
+```text
+manga/
+  nome-manga/
+    info.json
+    copertina.jpg                 (facoltativa)
+    capitoli/
+      001/
+        001.jpg
+        002.jpg
+      002/
+        001.jpg
 
-## Esempio: aggiungere un libro
+libri/
+  nome-libro/
+    info.json
+    capitoli/
+      001/
+        capitolo.pdf
+      002/
+        capitolo.pdf
+```
 
-Copia questo blocco dentro la lista `[]` di `catalogo.json`. Cambia l'`id` (solo minuscole, numeri e trattini), i dati e il capitolo. Per aggiungere un manga, usa `"type": "manga"` al posto di `"libro"`.
+Per un manga usa `manga/nome-manga/`; per un libro usa `libri/nome-libro/`. Aggiorna il `info.json` del modello e copia la cartella `capitoli/001` per ogni nuovo capitolo. Per un manga metti le pagine in immagini numerate (`001.jpg`, `002.jpg` e così via); per un libro metti un PDF dentro la cartella del capitolo. I file `README.md` nei modelli sono solo istruzioni e non vengono mostrati nel catalogo.
+
+### Contenuto di `info.json`
 
 ```json
 {
-  "id": "il-mio-libro",
-  "title": "Il mio libro",
+  "title": "Il mio manga",
   "author": "Nome autore",
-  "type": "libro",
   "genre": "Avventura",
   "year": 2026,
+  "description": "Una breve descrizione.",
   "rating": "",
   "volumes": "In corso",
-  "description": "Una breve descrizione.",
-  "style": "linear-gradient(145deg,#253945,#bd654a 58%,#e4b36a)",
-  "orb": "#edc38c",
-  "shape": "#252834",
-  "chapters": [
-    {
-      "title": "Capitolo 1 — L'inizio",
-      "url": "https://example.com/il-mio-libro/capitolo-1"
-    }
-  ]
+  "cover": "copertina.jpg"
 }
 ```
 
-Per aggiungere altri capitoli, copia un oggetto dentro `chapters` e separalo dagli altri con una virgola. Puoi lasciare la lista vuota (`"chapters": []`) e completarla in seguito. Puoi copiare i tre campi grafici (`style`, `orb`, `shape`) da un titolo esistente.
+`title`, `author`, `genre`, `year` e `description` sono obbligatori. `rating`, `volumes` e `cover` sono facoltativi. Se non specifichi la copertina, il sito crea una copertina grafica. Per aggiungere una copertina, aggiungi il suo file (ad esempio `copertina.jpg`) alla cartella del titolo e `"cover": "copertina.jpg"` in `info.json`. Usa nomi di cartella semplici, per esempio `one-piece` o `il-mio-libro`.
 
-Se hai una copertina su un indirizzo pubblico `https://`, aggiungi anche `"cover": "https://esempio.it/copertina.jpg"` prima di `chapters`.
+## Pubblicazione automatica
 
-## Caricare capitoli su GitHub
+Quando hai aggiunto o aggiornato i file, fai **Commit to main** e poi **Push origin** in GitHub Desktop. GitHub Actions trova automaticamente nuove cartelle e capitoli, aggiorna il catalogo e pubblica tutto su [Yoru](https://cinemabot-star.github.io/MANGAWEB/). Non devi modificare `catalogo.json`: viene generato durante la pubblicazione. Puoi controllare lo stato in [Actions](https://github.com/CINEMABOT-star/MANGAWEB/actions/workflows/pages.yml).
 
-Puoi usare un link pubblico `https://` per ogni capitolo oppure caricare su GitHub i file che hai il diritto di distribuire:
-
-1. Nel repository, crea la cartella `capitoli` (se non esiste) e carica i file con **Add file → Upload files**.
-2. Dopo la pubblicazione, il link di un file nella cartella sarà del tipo `https://cinemabot-star.github.io/MANGAWEB/capitoli/nome-file.pdf`.
-3. Incolla quel link nel campo `url` del capitolo corrispondente in `catalogo.json`.
-
-I capitoli possono essere PDF, immagini o altri file leggibili dal browser. Non caricare opere protette da copyright senza autorizzazione: i file del repository pubblico possono essere scaricati da chiunque.
-
-**Nota:** ogni titolo deve avere un `id` diverso. Il JSON usa virgolette doppie e richiede virgole tra i campi e tra gli oggetti, ma non dopo l'ultimo. Il sito controlla il formato e mostra un messaggio se trova un errore.
+I capitoli immagine si leggono direttamente nel sito; PDF ed EPUB si aprono dal relativo capitolo. Carica solo opere e immagini che sei autorizzato a distribuire: il repository e il sito sono pubblici e i file possono essere scaricati da chiunque.
 
 ## Link
 
 - [Apri il sito Yoru](https://cinemabot-star.github.io/MANGAWEB/)
 - [Repository GitHub](https://github.com/CINEMABOT-star/MANGAWEB)
-- [Modifica il catalogo su GitHub](https://github.com/CINEMABOT-star/MANGAWEB/edit/main/catalogo.json)
 - [Workflow di pubblicazione](https://github.com/CINEMABOT-star/MANGAWEB/actions/workflows/pages.yml)
-
-I preferiti vengono conservati localmente nel browser del visitatore tramite `localStorage`.
