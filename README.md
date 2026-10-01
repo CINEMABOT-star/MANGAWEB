@@ -41,9 +41,17 @@ Per aggiungere altri capitoli, copia un oggetto dentro `chapters` e separalo dag
 
 Se hai una copertina su un indirizzo pubblico `https://`, aggiungi anche `"cover": "https://esempio.it/copertina.jpg"` prima di `chapters`.
 
-**Nota:** ogni titolo deve avere un `id` diverso. Il JSON usa virgolette doppie e richiede virgole tra i campi e tra gli oggetti, ma non dopo l'ultimo. Il sito controlla il formato e mostra un messaggio se trova un errore.
+## Caricare capitoli su GitHub
 
-Inserisci link a capitoli che sei autorizzato a condividere; GitHub Pages pubblica i file del repository e non è un archivio privato.
+Puoi usare un link pubblico `https://` per ogni capitolo oppure caricare su GitHub i file che hai il diritto di distribuire:
+
+1. Nel repository, crea la cartella `capitoli` (se non esiste) e carica i file con **Add file → Upload files**.
+2. Dopo la pubblicazione, il link di un file nella cartella sarà del tipo `https://cinemabot-star.github.io/MANGAWEB/capitoli/nome-file.pdf`.
+3. Incolla quel link nel campo `url` del capitolo corrispondente in `catalogo.json`.
+
+I capitoli possono essere PDF, immagini o altri file leggibili dal browser. Non caricare opere protette da copyright senza autorizzazione: i file del repository pubblico possono essere scaricati da chiunque.
+
+**Nota:** ogni titolo deve avere un `id` diverso. Il JSON usa virgolette doppie e richiede virgole tra i campi e tra gli oggetti, ma non dopo l'ultimo. Il sito controlla il formato e mostra un messaggio se trova un errore.
 
 ## Link
 
