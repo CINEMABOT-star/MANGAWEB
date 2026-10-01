@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101010">
+  <meta name="description" content="Yoru: scopri il tuo prossimo manga preferito. Un catalogo curato per chi ama le storie che restano.">
+  <title>Yoru — Storie che restano</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+    :root {
+      color-scheme: dark;
+      --bg: #101010;
+      --panel: #181818;
+      --muted: #999791;
+      --text: #f4f0e9;
+      --accent: #d7f36a;
+      --line: rgba(255,255,255,.1);
+      --sans: "DM Sans", sans-serif;
+      --serif: "Playfair Display", Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    .topbar {
+      height: 76px; padding: 0 6.1%; display: flex; align-items: center; gap: 48px;
+      position: absolute; z-index: 5; inset: 0 0 auto; background: linear-gradient(#101010b8, transparent);
+    }
+    .brand { display:flex; align-items:center; gap:10px; font-size:22px; font-weight:700; letter-spacing:-1.2px; }
+    .brand-mark { width:24px; height:24px; display:grid; place-items:center; background:var(--accent); color:#111; border-radius:50% 50% 50% 4px; font-size:14px; }
+    .nav { display:flex; gap:28px; align-items:center; font-size:13px; color:#d5d2cc; }
+    .nav a:hover, .nav a.active { color:var(--accent); }
+    .top-actions { margin-left:auto; display:flex; align-items:center; gap:22px; }
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:12px; top:11px; color:#c6c4bf; pointer-events:none; }
+    .search { width:196px; padding:10px 12px 10px 38px; border:1px solid #ffffff38; border-radius:5px; color:white; background:#08080882; outline:none; font-size:12px; }
+    .search:focus { border-color:var(--accent); }
+    .avatar { width:32px; height:32px; border-radius:50%; display:grid; place-items:center; color:#151515; background:linear-gradient(145deg,#e1bd9f,#8b5145); font-weight:700; font-size:12px; }
+    .hero {
+      min-height:650px; height: min(82vh, 820px); position:relative; display:flex; align-items:center;
+      overflow:hidden; background:
+       radial-gradient(ellipse at 72% 35%, #e15e4355 0, transparent 28%),
+       radial-gradient(ellipse at 80% 68%, #d7a84d42 0, transparent 30%),
+       linear-gradient(90deg,#101010 0%,#101010f0 29%,#10101070 58%,#10101020 100%),
+       linear-gradient(0deg,#101010 0%,transparent 28%),
+       linear-gradient(125deg,#27201e,#3e2821 47%,#13171b);
+    }
+    .hero::before { content:""; position:absolute; width:440px; height:560px; right:13%; top:12%; opacity:.8; transform:rotate(7deg);
+      background: radial-gradient(ellipse at 51% 42%,#f8d9b6 0 8%,transparent 8.5%),
+       radial-gradient(ellipse at 50% 51%,#202127 0 18%,transparent 18.5%),
+       linear-gradient(118deg,transparent 0 26%,#1b1c21 27% 67%,transparent 68%),
+       radial-gradient(ellipse at 52% 43%,#a24d35 0 38%,transparent 38.5%);
+      filter:drop-shadow(30px 28px 28px #0008);
+    }
+    .hero::after { content:""; position:absolute; width:380px;height:380px;right:14%;top:1%;border:1px solid #f4d6a526;border-radius:50%;box-shadow:0 0 0 42px #f4d6a50a,0 0 0 84px #f4d6a507; }
+    .hero-copy { position:relative; z-index:1; width:min(550px,52%); margin-left:10.5%; margin-top:54px; }
+    .eyebrow { display:flex; align-items:center; gap:9px; color:var(--accent); font-size:10px; letter-spacing:2px; font-weight:700; text-transform:uppercase; }
+    .eyebrow::before { content:""; width:20px; height:1px; background:var(--accent); }
+    h1 { font:600 clamp(48px,6.2vw,82px)/.99 var(--serif); letter-spacing:-2.5px; margin:22px 0 17px; max-width:570px; }
+    .hero-meta { display:flex; align-items:center; gap:12px; color:#ddd; font-size:12px; margin-bottom:17px; }
+    .rating { color:var(--accent); font-weight:700; }
+    .pill { border:1px solid #ffffff38; padding:4px 8px; border-radius:3px; font-size:10px; }
+    .hero-description { color:#d1cec8; font-size:14px; line-height:1.8; max-width:430px; }
+    .hero-buttons { display:flex; gap:10px; margin-top:25px; }
+    .btn { border:0; border-radius:4px; padding:12px 18px; font-weight:700; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:9px; cursor:pointer; transition:.2s; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { color:#141414; background:var(--accent); }
+    .btn-secondary { color:white; background:#ffffff24; backdrop-filter:blur(8px); }
+    .content { position:relative; z-index:2; margin-top:-56px; padding:0 6.1% 70px; }
+    .section { margin:0 auto 41px; max-width:1600px; }
+    .section-head { display:flex; align-items:end; justify-content:space-between; margin-bottom:17px; }
+    h2 { font:500 23px var(--serif); margin:0; letter-spacing:-.3px; }
+    .section-sub { color:var(--muted); font-size:11px; margin-top:5px; }
+    .text-link { color:var(--accent); font-size:11px; cursor:pointer; background:none; border:0; }
+    .filters { display:flex; gap:8px; overflow:auto; padding:2px 0 17px; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .filter { flex:none; border:1px solid #ffffff24; border-radius:30px; color:#bbb8b1; background:transparent; padding:8px 14px; font-size:11px; cursor:pointer; transition:.18s; }
+    .filter:hover,.filter.selected { background:var(--accent); border-color:var(--accent); color:#161616; }
+    button:active { transform:scale(.96); }
+    .grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:17px; }
+    .card { min-width:0; cursor:pointer; }
+    .cover { height:auto; aspect-ratio: .72; overflow:hidden; position:relative; border-radius:4px; background:#272727; isolation:isolate; transition:transform .25s, box-shadow .25s; }
+    .card:hover .cover { transform:translateY(-5px) scale(1.018); box-shadow:0 15px 30px #0009; }
+    .art { position:absolute; inset:0; overflow:hidden; }
+    .art::before { content:""; position:absolute; inset:0; background:var(--art); }
+    .art::after { content:""; position:absolute; inset:0; background:linear-gradient(0deg,#090909d9,transparent 62%),linear-gradient(90deg,#0002,transparent 60%); }
+    .art-orb { position:absolute; z-index:1; width:58%; aspect-ratio:1; border-radius:50%; top:13%; right:9%; background:var(--orb); opacity:.8; filter:blur(.2px); box-shadow:0 0 46px var(--orb); }
+    .art-shape { position:absolute; z-index:1; bottom:7%; left:28%; width:49%; height:62%; background:var(--shape); clip-path:polygon(35% 0,65% 0,73% 21%,100% 53%,77% 57%,91% 100%,12% 100%,28% 60%,0 52%,28% 22%); filter:drop-shadow(9px 10px 8px #0008); }
+    .art-shape::after { content:""; position:absolute; width:30%; height:20%; border-radius:50%; background:#f0d5b8; left:35%; top:3%; }
+    .cover-label { position:absolute; z-index:2; top:12px; left:12px; color:#ffffffce; font-size:8px; letter-spacing:2px; writing-mode:vertical-rl; }
+    .cover-title { position:absolute; z-index:2; left:13px; right:10px; bottom:15px; font:600 clamp(16px,1.7vw,25px)/.95 var(--serif); text-shadow:0 2px 12px #000; }
+    .cover-vol { position:absolute; z-index:2; right:11px; top:12px; font:italic 11px var(--serif); color:#ffffffd1; }
+    .heart { position:absolute; z-index:3; right:9px; top:9px; border:0; border-radius:50%; width:30px; height:30px; display:grid; place-items:center; background:#1118; opacity:0; cursor:pointer; transition:.2s; }
+    .card:hover .heart,.heart.is-favorite { opacity:1; }
+    .heart.is-favorite { color:#ff746e; }
+    .card-title { margin-top:10px; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card-meta { margin-top:5px; display:flex; justify-content:space-between; gap:5px; color:var(--muted); font-size:10px; }
+    .card-rating { color:var(--accent); }
+    .empty { grid-column:1/-1; padding:55px 20px; text-align:center; color:var(--muted); border:1px dashed var(--line); border-radius:5px; }
+    .empty strong { color:var(--text); display:block; font:500 20px var(--serif); margin-bottom:8px; }
+    .banner { display:flex; align-items:center; justify-content:space-between; border:1px solid #ffffff17; border-radius:5px; padding:28px 32px; background:radial-gradient(ellipse at 85% 50%,#d7f36a22,transparent 40%),#171816; }
+    .banner h2 { font-size:25px; }
+    .banner p { color:var(--muted); font-size:12px; margin:7px 0 0; }
+    footer { border-top:1px solid var(--line); padding:26px 6%; display:flex; justify-content:space-between; color:#777; font-size:10px; }
+    .modal-backdrop { position:fixed; z-index:10; inset:0; display:none; align-items:center; justify-content:center; padding:20px; background:#000b; backdrop-filter:blur(7px); }
+    .modal-backdrop.open { display:flex; }
+    .modal { width:min(680px,100%); display:grid; grid-template-columns:220px 1fr; gap:28px; padding:25px; background:#191919; border:1px solid #ffffff1c; border-radius:7px; position:relative; box-shadow:0 25px 100px #000a; }
+    .modal .cover { width:100%; }
+    .modal-copy { align-self:center; }
+    .modal-copy h2 { font-size:32px; margin:12px 0; }
+    .modal-copy p { color:#bbb8b1; font-size:13px; line-height:1.7; }
+    .modal-copy .hero-meta { flex-wrap:wrap; }
+    .modal-close { position:absolute; right:12px; top:10px; border:0; background:transparent; color:#aaa; font-size:23px; cursor:pointer; }
+    .toast {
+      position:fixed; z-index:20; left:50%; bottom:26px; max-width:calc(100% - 32px);
+      padding:12px 18px; border:1px solid #ffffff20; border-radius:6px;
+      color:var(--text); background:#222e; box-shadow:0 8px 32px #0008;
+      font-size:12px; text-align:center; opacity:0; transform:translate(-50%,12px);
+      pointer-events:none; transition:opacity .2s,transform .2s;
+    }
+    .toast.visible { opacity:1; transform:translate(-50%,0); }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media(hover:none) { .heart { opacity:1; } }
+    @media(max-width:1000px) { .grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px} .hero-copy{margin-left:7%;} .topbar{padding:0 5%;gap:28px} .nav{gap:16px} }
+    @media(max-width:700px) {
+      .topbar{height:64px;padding:0 5%;gap:0}.nav{display:none}.top-actions{gap:13px}.search{width:150px}.hero{height:690px;min-height:0;align-items:end;padding-bottom:112px;background-position:center}
+      .hero::before{width:280px;height:390px;right:-7%;top:8%;opacity:.65}.hero::after{right:-10%;top:5%;width:280px;height:280px}
+      .hero-copy{width:86%;margin:0 0 0 6%;}.hero-copy h1{font-size:54px}.hero-description{font-size:12px;max-width:370px}
+      .content{margin-top:-36px;padding:0 5% 50px}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}.section{margin-bottom:32px}.section-head h2{font-size:20px}
+      .banner{padding:22px 18px;gap:12px}.banner h2{font-size:20px}.banner p{max-width:260px;line-height:1.5}
+    }
+    @media(max-width:430px) {
+      .brand{font-size:19px}.search{width:120px}.avatar{display:none}.hero{height:650px}.hero-copy h1{font-size:48px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+      .cover-title{font-size:22px}.modal{grid-template-columns:115px 1fr;gap:16px;padding:17px}.modal-copy h2{font-size:23px}.modal-copy p{font-size:11px}.modal-copy .hero-meta{gap:6px;font-size:10px}
+    }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after{scroll-behavior:auto!important;transition:none!important} }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Yoru, home"><span class="brand-mark">夜</span> yoru</a>
+    <nav class="nav" aria-label="Navigazione principale">
+      <a href="#scopri" class="active">Scopri</a><a href="#catalogo">Catalogo</a><a href="#preferiti" id="favoritesNav">La mia lista</a>
+    </nav>
+    <div class="top-actions">
+      <label class="search-wrap" aria-label="Cerca manga">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="search" id="search" type="search" placeholder="Titolo, autore..." autocomplete="off">
+      </label>
+      <div class="avatar" aria-label="Profilo">Y</div>
+    </div>
+  </header>
+  <main>
+    <section class="hero" id="scopri">
+      <div class="hero-copy">
+        <div class="eyebrow">La scelta di Yoru · 01</div>
+        <h1>Il silenzio<br>prima della<br>tempesta.</h1>
+        <div class="hero-meta"><span class="rating">★ 9.4</span><span>2024</span><span class="pill">SEINEN</span><span class="pill">FANTASY</span></div>
+        <p class="hero-description">In un regno dove i ricordi hanno un prezzo, una cartografa cerca l’unico luogo che nessuna mappa osa mostrare. Un viaggio delicato, tra meraviglia e malinconia.</p>
+        <div class="hero-buttons">
+          <button class="btn btn-primary" id="heroExplore"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m8 5 12 7-12 7z"/></svg> Esplora il catalogo</button>
+          <button class="btn btn-secondary" id="heroInfo"><span style="font-size:16px">＋</span> Scopri di più</button>
+        </div>
+      </div>
+    </section>
+    <div class="content" id="catalogo">
+      <section class="section">
+        <div class="section-head"><div><h2>Una storia per ogni momento</h2><div class="section-sub">Selezionati con cura, aggiornati ogni settimana.</div></div><button class="text-link" id="clearFilters">Mostra tutto ↗</button></div>
+        <div class="filters" id="filters" aria-label="Filtra per genere"></div>
+        <p class="sr-only" id="resultsStatus" aria-live="polite" aria-atomic="true"></p>
+        <div class="grid" id="mangaGrid"></div>
+      </section>
+      <section class="section" id="preferiti">
+        <div class="banner"><div><h2>Le storie che ti chiamano.</h2><p>Aggiungi un titolo alla tua lista e ritrovalo qui, quando vuoi.</p></div><button class="btn btn-primary" id="showFavorites">La mia lista <span aria-hidden="true">→</span></button></div>
+      </section>
+    </div>
+  </main>
+  <footer><span>© 2026 Yoru — Fatto per chi ama perdersi nelle storie.</span><span>Un catalogo, infinite avventure.</span></footer>
+  <div class="modal-backdrop" id="modalBackdrop" role="presentation">
+    <article class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" aria-label="Chiudi">×</button>
+      <div id="modalCover"></div><div class="modal-copy" id="modalCopy"></div>
+    </article>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script>
+    const manga = [
+      {id:"sotto-cielo",title:"Sotto un cielo lontano",author:"Mina Kisaragi",genre:"Fantasy",year:2024,rating:"9.4",volumes:"12 volumi",description:"Dopo aver perso ogni ricordo della sua infanzia, Aoi trova una mappa disegnata con la propria calligrafia. Il viaggio per seguirla cambierà ogni cosa.",style:"linear-gradient(145deg,#253945,#bd654a 58%,#e4b36a)",orb:"#edc38c",shape:"#252834"},
+      {id:"ultima-estate",title:"L'ultima estate",author:"Ren Sato",genre:"Slice of life",year:2023,rating:"9.1",volumes:"8 volumi",description:"Quattro amici, una casa sul mare e l'estate che avrebbero voluto fermare. Una storia luminosa sulle cose che cambiano, e su quelle che restano.",style:"linear-gradient(145deg,#5c8e9b,#d6a773 62%,#f4d5a2)",orb:"#f6d792",shape:"#384653"},
+      {id:"lame-neve",title:"Lame di neve",author:"T. Arakawa",genre:"Azione",year:2025,rating:"8.9",volumes:"In corso",description:"Ai confini del nord, una spadaccina in esilio protegge l'ultimo villaggio rimasto. Ma la neve porta con sé ombre che nessuna lama può ferire.",style:"linear-gradient(145deg,#243447,#7793a3 52%,#e1e5e5)",orb:"#edf4ee",shape:"#27313d"},
+      {id:"citta-invisibile",title:"La città invisibile",author:"Yumi Hoshino",genre:"Mistero",year:2022,rating:"9.2",volumes:"6 volumi",description:"Ogni notte appare una strada che non esiste. Un giovane archivista la percorre per ritrovare sua sorella, seguendo indizi nascosti nei sogni degli abitanti.",style:"linear-gradient(150deg,#263251,#535d89 55%,#d3998e)",orb:"#e6a987",shape:"#28243c"},
+      {id:"giardino-luna",title:"Il giardino della luna",author:"E. Mizuno",genre:"Romance",year:2024,rating:"8.8",volumes:"9 volumi",description:"Una fioraia che parla con le piante e un astronomo che ha smesso di guardare le stelle. La loro serra, aperta solo dopo il tramonto, diventa un nuovo inizio.",style:"linear-gradient(145deg,#304939,#769a69 53%,#dfbf78)",orb:"#e8d291",shape:"#353d37"},
+      {id:"zero-ora",title:"Zero Hour",author:"Kaito Mori",genre:"Sci-fi",year:2025,rating:"9.0",volumes:"In corso",description:"Restano settantadue minuti prima che la luna si spenga. Una pilota e un'intelligenza artificiale attraversano lo spazio per scoprire chi ha fermato il tempo.",style:"linear-gradient(150deg,#182d48,#4479a3 50%,#ae6571)",orb:"#efb16f",shape:"#242a39"},
+      {id:"canto-corvi",title:"Il canto dei corvi",author:"Nana Fujii",genre:"Mistero",year:2021,rating:"8.7",volumes:"11 volumi",description:"In un villaggio dove i corvi ricordano tutto, una bambina scopre di essere l'unica a non avere un passato. Un mistero poetico dalle atmosfere sospese.",style:"linear-gradient(145deg,#24242d,#63505e 55%,#b98f72)",orb:"#d7b68f",shape:"#292732"},
+      {id:"cucina-mostri",title:"Cucina mostri!",author:"Tomo Ueda",genre:"Commedia",year:2023,rating:"8.6",volumes:"7 volumi",description:"Il ristorante di Akira serve piatti impossibili a clienti ancora più improbabili. La ricetta segreta? Ascoltare le storie di chi si siede a tavola.",style:"linear-gradient(145deg,#597344,#d2a14b 58%,#d46a48)",orb:"#f4c56e",shape:"#4c3b35"},
+      {id:"mare-rosso",title:"Mare rosso",author:"Haru Takeda",genre:"Azione",year:2024,rating:"9.3",volumes:"10 volumi",description:"Su un pianeta coperto d'acqua, una capitana cerca la nave che ha tradito la sua famiglia. Ogni isola custodisce una verità e un prezzo da pagare.",style:"linear-gradient(145deg,#273e52,#a94f48 58%,#df9b69)",orb:"#f0b779",shape:"#28303b"},
+      {id:"piccole-orbite",title:"Piccole orbite",author:"Sora Abe",genre:"Slice of life",year:2025,rating:"8.9",volumes:"4 volumi",description:"Due coinquilini, un gatto randagio e la quotidianità vista da molto vicino. Piccoli gesti che, pagina dopo pagina, diventano un universo intero.",style:"linear-gradient(145deg,#637e8e,#c38f79 58%,#ead1a2)",orb:"#f3dbaa",shape:"#424750"},
+      {id:"lupo-bianco",title:"Il lupo bianco",author:"R. Kurosawa",genre:"Fantasy",year:2022,rating:"9.1",volumes:"14 volumi",description:"Una guaritrice attraversa terre proibite in compagnia di un lupo che conosce il nome delle stelle. Un fantasy epico sul coraggio di scegliere la propria strada.",style:"linear-gradient(145deg,#344452,#87959a 58%,#c8b49a)",orb:"#ede0bf",shape:"#34353b"},
+      {id:"lettere-maggio",title:"Lettere di maggio",author:"Ami Natsume",genre:"Romance",year:2023,rating:"8.8",volumes:"5 volumi",description:"Una lettera arriva ogni primavera, sempre senza firma. Quando finalmente la destinataria scopre chi le scrive, la risposta è più vicina di quanto immaginasse.",style:"linear-gradient(145deg,#5d454b,#c5807b 58%,#e7c29b)",orb:"#f2d6bc",shape:"#493a40"}
+    ];
+    const genres = ["Tutti","Fantasy","Azione","Romance","Mistero","Slice of life","Sci-fi","Commedia"];
+    const grid = document.getElementById("mangaGrid");
+    const search = document.getElementById("search");
+    const filters = document.getElementById("filters");
+    let activeGenre = "Tutti";
+    let favoritesOnly = false;
+    let favorites = [];
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove("visible"), 2400);
+    }
+    try {
+      const saved = JSON.parse(localStorage.getItem("yoru-favorites") || "[]");
+      if (Array.isArray(saved) && saved.every(id => typeof id === "string")) favorites = saved;
+    } catch (error) {
+      console.warn("Impossibile leggere i preferiti salvati:", error);
+    }
+
+    function coverMarkup(item, extraClass = "") {
+      return `<div class="cover ${extraClass}" style="--art:${item.style};--orb:${item.orb};--shape:${item.shape}">
+        <div class="art"><span class="art-orb"></span><span class="art-shape"></span></div>
+        <span class="cover-label">YORU · ${item.year}</span><span class="cover-vol">${item.volumes.startsWith("In") ? "連載" : "01"}</span>
+        <span class="cover-title">${item.title}</span>
+      </div>`;
+    }
+    function renderFilters() {
+      filters.innerHTML = genres.map(genre => `<button class="filter${genre === activeGenre ? " selected" : ""}" data-genre="${genre}" aria-pressed="${genre === activeGenre}">${genre}</button>`).join("");
+    }
+    function render() {
+      const query = search.value.trim().toLocaleLowerCase("it");
+      const items = manga.filter(item => (activeGenre === "Tutti" || item.genre === activeGenre)
+        && (!favoritesOnly || favorites.includes(item.id))
+        && (!query || `${item.title} ${item.author} ${item.genre}`.toLocaleLowerCase("it").includes(query)));
+      document.getElementById("resultsStatus").textContent = `${items.length} ${items.length === 1 ? "titolo trovato" : "titoli trovati"}`;
+      grid.innerHTML = items.length ? items.map(item => `<article class="card" data-id="${item.id}" tabindex="0" aria-label="${item.title}, di ${item.author}">
+        <div style="position:relative">${coverMarkup(item)}
+          <button class="heart${favorites.includes(item.id) ? " is-favorite" : ""}" data-favorite="${item.id}" aria-label="${favorites.includes(item.id) ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}" aria-pressed="${favorites.includes(item.id)}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${favorites.includes(item.id) ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></svg>
+          </button>
+        </div>
+        <div class="card-title">${item.title}</div><div class="card-meta"><span>${item.genre} · ${item.year}</span><span class="card-rating">★ ${item.rating}</span></div>
+      </article>`).join("") : `<div class="empty"><strong>${favoritesOnly ? "La tua lista è ancora vuota." : "Nessuna storia trovata."}</strong>${favoritesOnly ? "Tocca il cuore su un manga per salvarlo qui." : "Prova un altro titolo o scegli un genere diverso."}</div>`;
+    }
+    function toggleFavorite(id) {
+      const removing = favorites.includes(id);
+      favorites = removing ? favorites.filter(favorite => favorite !== id) : [...favorites, id];
+      try {
+        localStorage.setItem("yoru-favorites", JSON.stringify(favorites));
+        showToast(removing ? "Rimosso dalla tua lista." : "Aggiunto alla tua lista ♥");
+      } catch (error) {
+        console.warn("Impossibile salvare i preferiti:", error);
+        showToast("Preferito aggiornato solo per questa sessione.");
+      }
+      render();
+    }
+    function openDetail(item) {
+      document.getElementById("modalCover").innerHTML = coverMarkup(item);
+      document.getElementById("modalCopy").innerHTML = `<div class="eyebrow">${item.genre} · ${item.year}</div><h2 id="modalTitle">${item.title}</h2>
+        <div class="hero-meta"><span class="rating">★ ${item.rating}</span><span>${item.volumes}</span><span class="pill">${item.author}</span></div>
+        <p>${item.description}</p><button class="btn btn-primary" data-modal-favorite="${item.id}">${favorites.includes(item.id) ? "♥  Nella tua lista" : "＋  Aggiungi alla lista"}</button>`;
+      document.getElementById("modalBackdrop").classList.add("open");
+      document.getElementById("modalClose").focus();
+      showToast(`Hai aperto: ${item.title}`);
+    }
+    renderFilters(); render();
+    filters.addEventListener("click", event => {
+      const button = event.target.closest("[data-genre]");
+      if (!button) return;
+      activeGenre = button.dataset.genre; favoritesOnly = false; renderFilters(); render();
+      showToast(`${activeGenre === "Tutti" ? "Tutti i generi" : activeGenre} · ${grid.querySelectorAll(".card").length} titoli`);
+    });
+    grid.addEventListener("click", event => {
+      const favoriteButton = event.target.closest("[data-favorite]");
+      if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); return; }
+      const card = event.target.closest("[data-id]");
+      if (card) openDetail(manga.find(item => item.id === card.dataset.id));
+    });
+    grid.addEventListener("keydown", event => {
+      if ((event.key === "Enter" || event.key === " ") && event.target.matches(".card")) {
+        event.preventDefault(); openDetail(manga.find(item => item.id === event.target.dataset.id));
+      }
+    });
+    search.addEventListener("input", render);
+    document.getElementById("clearFilters").addEventListener("click", () => { activeGenre = "Tutti"; favoritesOnly = false; search.value = ""; renderFilters(); render(); showToast("Catalogo completo."); });
+    document.getElementById("showFavorites").addEventListener("click", () => {
+      favoritesOnly = !favoritesOnly; activeGenre = "Tutti"; renderFilters(); render();
+      showToast(favoritesOnly ? `${favorites.length} ${favorites.length === 1 ? "titolo salvato" : "titoli salvati"} nella tua lista.` : "Stai esplorando tutto il catalogo.");
+      document.getElementById("catalogo").scrollIntoView({behavior:"smooth"});
+    });
+    document.getElementById("favoritesNav").addEventListener("click", event => {
+      event.preventDefault(); favoritesOnly = true; activeGenre = "Tutti"; renderFilters(); render();
+      showToast(`${favorites.length} ${favorites.length === 1 ? "titolo salvato" : "titoli salvati"} nella tua lista.`);
+      document.getElementById("catalogo").scrollIntoView({behavior:"smooth"});
+    });
+    document.getElementById("heroExplore").addEventListener("click", () => { showToast("Ecco tutte le storie, scegli la tua."); document.getElementById("catalogo").scrollIntoView({behavior:"smooth"}); });
+    document.getElementById("heroInfo").addEventListener("click", () => openDetail(manga[0]));
+    function closeDetail() {
+      document.getElementById("modalBackdrop").classList.remove("open");
+      showToast("Scheda chiusa.");
+    }
+    document.getElementById("modalClose").addEventListener("click", closeDetail);
+    document.getElementById("modalBackdrop").addEventListener("click", event => { if (event.target.id === "modalBackdrop") closeDetail(); });
+    document.getElementById("modalCopy").addEventListener("click", event => {
+      const button = event.target.closest("[data-modal-favorite]");
+      if (button) { toggleFavorite(button.dataset.modalFavorite); openDetail(manga.find(item => item.id === button.dataset.modalFavorite)); }
+    });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && document.getElementById("modalBackdrop").classList.contains("open")) closeDetail(); });
+  </script>
+</body>
+</html>
